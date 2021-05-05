@@ -15,7 +15,7 @@ ap.add_argument('center', type=center_str, nargs='?', default="125x100",
                 help='XxY rotation center (mm)')
 args = ap.parse_args()
 
-angle = args.angle
+angle = np.radians(args.angle)
 center = args.center
 
 
