@@ -1,4 +1,4 @@
-gcode_tools
+gcode tools
 ===========
 
-- gcoderotate: postprocess G-Code by rotating the instrunctions along an arbitrary Z axis
+- gcoderotate.py: postprocess G-Code by rotating the instrunctions along an arbitrary Z axis
