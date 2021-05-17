@@ -13,13 +13,16 @@ ap = ap.ArgumentParser(description='rotate G-Code along Z')
 ap.add_argument('-r', '--rotate', type=float, default=0,
                 help='Z rotation angle (degrees)')
 ap.add_argument('-c', '--center', type=coord_pair, default="125x100",
-                help='XxY rotation center (mm)')
+                help='XxY rotation center (mm, default: 125x100)')
 ap.add_argument('-t', '--translate', type=coord_pair, default="0x0",
-                help='XxY translation (mm)')
+                help='XxY translation (mm, default: 0x0)')
 ap.add_argument('--precision', type=int, default=3,
-                help='output coordinate decimal precision')
+                help='output coordinate decimal precision (default: 3)')
+ap.add_argument('file', nargs='?',
+                help='input file to process (default to stdin)')
 args = ap.parse_args()
 
+fd = sys.stdin if args.file is None else open(args.file)
 angle = np.radians(args.rotate)
 center = args.center
 translate = args.translate
@@ -52,7 +55,7 @@ def transform(x, y):
 
 # parsing and substitution
 cursor = [None, None]
-for line in sys.stdin:
+for line in fd:
     line = line.rstrip('\n')
 
     if re.match(r'G91\b', line):
