@@ -1,71 +1,80 @@
 #!/usr/bin/env python3
 # rotate g-code along Z
 import argparse as ap
-import sys
+import os, sys
 import re
 import numpy as np
 
 # params
-def center_str(string):
+def coord_pair(string):
     return list(map(float, string.split('x')))
 
 ap = ap.ArgumentParser(description='rotate G-Code along Z')
-ap.add_argument('angle', type=float, help='rotation angle (degrees)')
-ap.add_argument('center', type=center_str, nargs='?', default="125x100",
+ap.add_argument('-r', '--rotate', type=float, default=0,
+                help='Z rotation angle (degrees)')
+ap.add_argument('-c', '--center', type=coord_pair, default="125x100",
                 help='XxY rotation center (mm)')
+ap.add_argument('-t', '--translate', type=coord_pair, default="0x0",
+                help='XxY translation (mm)')
+ap.add_argument('--precision', type=int, default=3,
+                help='output coordinate decimal precision')
 args = ap.parse_args()
 
-angle = np.radians(args.angle)
+angle = np.radians(args.rotate)
 center = args.center
+translate = args.translate
+fmt_str = '{{:.{}f}}'.format(args.precision)
+
+def error(msg):
+    print("{}: {}".format(os.path.basename(sys.argv[0]), msg), file=sys.stderr)
+
+if angle == 0 and translate == [0, 0]:
+    error('performing no-op transform')
 
 
 # setup transform
 R = np.array([[ np.cos(angle), np.sin(angle), 0],
               [-np.sin(angle), np.cos(angle), 0],
               [0, 0, 1]])
-T = np.array([[1, 0, center[0]],
-              [0, 1, center[1]],
-              [0, 0, 1]])
-A = T @ R @ np.linalg.inv(T)
+rT = np.array([[1, 0, center[0]],
+               [0, 1, center[1]],
+               [0, 0, 1]])
+mT = np.array([[1, 0, translate[0]],
+               [0, 1, translate[1]],
+               [0, 0, 1]])
+A = rT @ R @ np.linalg.inv(rT) @ mT
 
 
 def transform(x, y):
     v = A @ np.array([x, y, 1])
-    return v[0], v[1]
+    return v[0:2]
 
 
 # parsing and substitution
-x = None
-y = None
+cursor = [None, None]
 for line in sys.stdin:
     line = line.rstrip('\n')
 
     if re.match(r'G91\b', line):
-        print('relative moves are not handled!')
+        error('relative moves are not handled!')
         exit(1)
 
     if re.match(r'G1\b', line) is None:
         print(line)
         continue
 
-    v = {}
-    for p in ['X', 'Y']:
+    seen = False
+    for i, p in enumerate(['X', 'Y']):
         m = re.search(r' {}(\S+)'.format(p), line)
         if m is not None:
             val = float(m.group(1))
-            v[p] = val
-            if p == 'X':
-                x = val
-            elif p == 'Y':
-                y = val
-
-    if len(v) == 0:
+            seen = True
+            cursor[i] = val
+    if not seen:
         print(line)
         continue
 
-    nx, ny = transform(x, y)
-
-    for p in v.keys():
-        line = re.sub(r' {}\S+'.format(p), '', line)
-    line = 'G1 X{:.3f} Y{:.3f}'.format(nx, ny) + line[2:]
+    nx, ny = map(lambda x: fmt_str.format(x), transform(*cursor))
+    line = re.sub(r' [XY]\S+', '', line)
+    line = 'G1 X{} Y{}'.format(nx, ny) + line[2:]
     print(line)
