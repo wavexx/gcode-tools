@@ -70,7 +70,7 @@ def format(x):
 
 
 # parsing and substitution
-pos = [None, None]
+pos = [0, 0]
 bounds_c = [None, None, None, None]
 bounds_t = [None, None, None, None]
 for line in fd:
