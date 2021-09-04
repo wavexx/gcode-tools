@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-# rotate g-code along Z
+# gcode-transform: transform G-Code coordinates
+# Copyright(c) 2021 by wave++ "Yuri D'Elia" <wavexx@thregr.org>
+# Distributed under the GNU GPLv3+ license, WITHOUT ANY WARRANTY.
 import argparse as ap
 import os, sys
 import re
