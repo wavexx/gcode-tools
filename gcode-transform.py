@@ -73,30 +73,44 @@ def format(x):
 
 # parsing and substitution
 pos = [0, 0]
+rel = False
 bounds_c = [None, None, None, None]
 bounds_t = [None, None, None, None]
 for line in fd:
     line = line.rstrip('\n')
 
-    if re.match(r'G91\b', line):
-        error('relative moves are not handled!')
-        exit(1)
-
-    if re.match(r'G1\b', line) is None:
-        print(line)
+    # handle absolute/relative switching
+    if re.match(r'G90\b', line):
+        rel = False
         continue
+    if re.match(r'G91\b', line):
+        rel = True
+        continue
+    if not rel:
+        coords = pos # alias
+    else:
+        coords = [0, 0]
 
+    # parse coordinates
     seen = False
     for i, p in enumerate(['X', 'Y']):
         m = re.search(r' {}(\S+)'.format(p), line)
         if m is not None:
             val = float(m.group(1))
             seen = True
-            pos[i] = val
+            coords[i] = val
     if not seen:
         print(line)
         continue
 
+    # make coordinates absolute
+    if rel:
+        if coords[0] is not None:
+            pos[0] += coords[0]
+        if coords[1] is not None:
+            pos[1] += coords[1]
+
+    # transform coordinates
     pos_t = transform(*pos)
     nx, ny = map(format, pos_t)
     line = re.sub(r' [XY]\S+', '', line)
