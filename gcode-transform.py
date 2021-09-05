@@ -73,7 +73,7 @@ def format(x):
 
 # parsing and substitution
 pos = [0, 0]
-rel = False
+rel = None
 bounds_c = [None, None, None, None]
 bounds_t = [None, None, None, None]
 for line in fd:
@@ -81,6 +81,8 @@ for line in fd:
 
     # handle absolute/relative switching
     if re.match(r'G90\b', line):
+        if rel is None:
+            print(line)
         rel = False
         continue
     if re.match(r'G91\b', line):
