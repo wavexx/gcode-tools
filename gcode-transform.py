@@ -46,6 +46,11 @@ def warn(arg):
 def info(arg):
     msg(0, arg)
 
+def dropna(lst):
+    for el in lst:
+        if el is not None:
+            yield el
+
 if angle == 0 and translate == [0, 0]:
     warn('performing no-op transform')
 
@@ -120,14 +125,14 @@ for line in fd:
     print(line)
 
     if verbosity > 0:
-        bounds_c[0] = min(filter(None, [bounds_c[0], pos[0]]))
-        bounds_c[1] = max(filter(None, [bounds_c[1], pos[0]]))
-        bounds_c[2] = min(filter(None, [bounds_c[2], pos[1]]))
-        bounds_c[3] = max(filter(None, [bounds_c[3], pos[1]]))
-        bounds_t[0] = min(filter(None, [bounds_t[0], pos_t[0]]))
-        bounds_t[1] = max(filter(None, [bounds_t[1], pos_t[0]]))
-        bounds_t[2] = min(filter(None, [bounds_t[2], pos_t[1]]))
-        bounds_t[3] = max(filter(None, [bounds_t[3], pos_t[1]]))
+        bounds_c[0] = min(dropna([bounds_c[0], pos[0]]))
+        bounds_c[1] = max(dropna([bounds_c[1], pos[0]]))
+        bounds_c[2] = min(dropna([bounds_c[2], pos[1]]))
+        bounds_c[3] = max(dropna([bounds_c[3], pos[1]]))
+        bounds_t[0] = min(dropna([bounds_t[0], pos_t[0]]))
+        bounds_t[1] = max(dropna([bounds_t[1], pos_t[0]]))
+        bounds_t[2] = min(dropna([bounds_t[2], pos_t[1]]))
+        bounds_t[3] = max(dropna([bounds_t[3], pos_t[1]]))
 
 if verbosity > 0:
     fmt_block = ' {{}}{{:-{}.{}f}}'.format(args.precision + 5, args.precision)
